@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>シーソー・ゲーム</title>
+<script src="Box2D.js"></script>
+<script>
+var b2Vec2 = Box2D.Common.Math.b2Vec2;  //2Dベクトル
+var world;                              //物理ワールド
+var ball = new Array(40);               //ボール
+var seesaw = new Array(4);              //シーソー
+var box = new Array(3);                 //箱のパーツ
+var angle = 0;                          //バーの回転角
+var x = 30;                             //箱の位置
+var speed = 0.05;                       //箱のスピード
+var rad = Math.PI/180;                  //ラジアン
+
+function init() {
+    //物理ワールド（重力加速度：9.8）
+    world = new Box2D.Dynamics.b2World(new b2Vec2(0, 9.8), true);       //重力、スリープを有効にする
+
+    //動的オブジェクト
+    var bodyDef = new Box2D.Dynamics.b2BodyDef;                         //オブジェクトを定義
+    bodyDef.type = Box2D.Dynamics.b2Body.b2_dynamicBody;                //動的オブジェクトにする
+
+    //ボールの形状（円、半径：0.5m）
+    var fixDef = new Box2D.Dynamics.b2FixtureDef;                       //材質を定義
+    fixDef.shape = new Box2D.Collision.Shapes.b2CircleShape(0.5);       //形状を円にする
+
+    //ボールの材質（密度：1.0、摩擦係数：0.5、反発係数：0.5）
+    fixDef.density = 1.0;                               //密度
+    fixDef.friction = 0.5;                              //摩擦係数
+    fixDef.restitution = 0.5;                           //反発係数
+
+    //ボールを作成
+    for (var i=0; i<ball.length; i++) {                 //ボールの数（40語）
+        //物理ワールドに動的オブジェクトとして作成
+        ball[i] = world.CreateBody(bodyDef);            //上で定義したオブジェクト
+        //形状と材質をセット
+        ball[i].CreateFixture(fixDef);                  //上で定義した材質
+        //回転速度、位置をセット
+        ball[i].SetAngularVelocity(2*Math.PI);          //回転速度は1秒あたり2πラジアン
+        ball[i].SetPosition(new b2Vec(30, 0));          //位置を画面の最上部中央に   
+    }
+
+    //静的オブジェクト
+    bodyDef.type = Box2D.Dynamics.b2Body.b2_staticBody;     //静的オブジェクトにする
+
+    //壁の形状（四角形、幅：２ｍ、高さ：４０ｍ）
+    fixDef.shape = new Box2D.Collision.Shapes.b2PolygonShape;   //形状を矩形にする
+    fixDef.shape.SetAsBox(1, 20);                               //矩形の大きさを２ｍ×４０ｍにセット
+
+    //壁を作成（物理ワールドに静的オブジェクトとして作成）
+    var wallLeft = world.CreateBody(bodyDef);   //左の壁
+    var wallRight = world.CreateBody(bodyDef);  //右の壁
+
+    //壁の形状をセット
+    wallLeft.CreateFixture(fixDef);
+    wallRight.CreateFixture(fixDef);
+
+    //壁の位置をセット
+    wallLeft.SetPosition(new b2Vec2(1, 30));
+    wallRight.SetPosition(new b2Vec2(59, 30));
+
+    //シーソーの形状（四角形、幅：２０ｍ、高さ：２ｍ）
+    fixDef.shape.SetAsBox(10, 1);               //矩形の大きさを２０ｍ×２ｍにセット
+
+    //シーソーを作成
+    for (var i=0; i<seesaw.length; i++) {       //シーソーの数（4個）
+       //物理ワールドに静的オブジェクトとして作成
+       seesaw[i] = world.CreateBody(bodyDef);
+       //形状をセット
+       seesaw[i].CreateFixture(fixDef);
+    }
+
+    //シーソーの位置をセット
+    seesaw[0].SetPosition(new b2Vec2(30, 10));
+    seesaw[1].SetPosition(new b2Vec2(45, 20));
+    seesaw[2].SetPosition(new b2Vec2(15, 30));
+    seesaw[3].SetPosition(new b2Vec2(30, 40));
+
+    //箱のパーツの形状（四角形、幅：８ｍ、高さ：２ｍ）
+    fixDef.shape.SetAsBox(4, 1);                //矩形の大きさを８ｍ×２ｍにセット
+
+    //箱のパーツを作成
+    for (var i=0; i<box.length; i++) {          //箱パーツの数（3個）
+       //物理ワールドに静的オブジェクトとして作成
+       box[i] = world.CreateBody(bodyDef);
+       //形状をセット
+       box[i].CreateFixture(fixDef);   
+    }
+
+    //箱のパーツの位置、向きをセット
+    box[0].SetPosition(new b2Vec2(x, 58));      //箱の底の部分
+    box[1].SetPositionAndAngle(new b2Vec2(x+5, 55), 90*rad);    //箱の壁を90度回転してセット
+    box[2].SetPositionAndAngle(new b2Vec2(x-5, 55), 90*rad);
+
+    //デバッグ描画の設定（スケール：１ｍ＝10px、半透明：0.3）
+    var debugDraw = new Box2D.Dynamics.b2DebugDraw();           //デバッグ描画を作成
+    debugDraw.SetSprite(document.getElementById("box2d").getContext("2d")); //キャンバスのID
+
+}
+
+
+
+
+
+
+

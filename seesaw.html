@@ -40,7 +40,7 @@ function init() {
         ball[i].CreateFixture(fixDef);                  //上で定義した材質
         //回転速度、位置をセット
         ball[i].SetAngularVelocity(2*Math.PI);          //回転速度は1秒あたり2πラジアン
-        ball[i].SetPosition(new b2Vec(30, 0));          //位置を画面の最上部中央に   
+        ball[i].SetPosition(new b2Vec2(30, 0));          //位置を画面の最上部中央に   
     }
 
     //静的オブジェクト
@@ -98,12 +98,77 @@ function init() {
     //デバッグ描画の設定（スケール：１ｍ＝10px、半透明：0.3）
     var debugDraw = new Box2D.Dynamics.b2DebugDraw();           //デバッグ描画を作成
     debugDraw.SetSprite(document.getElementById("box2d").getContext("2d")); //キャンバスのID
+    debugDraw.SetDrawScale(10);                                 //10ピクセル＝１ｍに
+    debugDraw.SetFillAlpha(0.3);                                //透明度は0,3
+    debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit);  //デバッグ描画で形状を表示
+    world.SetDebugDraw(debugDraw);
 
+    //物理ワールドを更新
+    setInterval(update, 1000/60);                               //60分の1秒ごとにupdate()関数を実行
 }
 
+function update() {
+    //物理ワールドを更新（フレームレート：1/60）
+    world.Step(1/60, 10, 10);
+    //デバッグ描画
+    world.DrawDebugData();
+    //物理ワールド内の力をクリア
+    world.ClearForces();
 
+    //箱の移動
+    x += speed;
+    if ((x < 5) || (x > 55)) speed *= -1;       //画面の端に行ったら反転する
+    box[0].SetPosition(new b2Vec2(x, 58));      //箱の位置を更新
+    box[1].SetPosition(new b2Vec2(x+5, 55));
+    box[2].SetPosition(new b2Vec2(x-5, 55));
 
+    //ボールの状態
+    for (var i=0; i < ball.length; i++) {
+        //スリープ
+        if (ball[i].IsAwake() == false) {       //もしボールがスリープ（停止状態）なら
+           //アクティブに変更、回転停止
+           ball[i].SetAwake(true);
+           ball[i].SetAngularVelocity(0);       
+        }
+        //落下
+        if (ball[i].GetPosition().y > 60) {     //ボールのy座標が画面下端より大きいなら
+            //初期地点へ移動、初速度：０
+            ball[i].SetPosition(new b2Vec2(30, 0));
+            ball[i].SetAngularVelocity(2*Math.PI);
+            ball[i].SetLinearVelocity(new b2Vec2(0, 0));    //速度を０にする
+        }
+    }
+}
 
+document.onkeydown = function(e) {      //eは押したキー
+    //リセット
+    if (e.key == "r") {                 //rキーならボールを初期化する
+       for (var i=0; i<ball.length; i++) {
+           //初期地点へ移動、初速度：０
+           ball[i].SetPosition(new b2Vec2(30, 0));
+           ball[i].SetAngularVelocity(2*Math.PI);
+           ball[i].SetLinearVelocity(new b2Vec2(0, 0));
+        }    
+    }
 
+    //回転（方向キー左：左回転、方向キー右：右回転）
+    if ((e.key == "ArrowLeft") || (e.key == "Left")) angle -= 2*rad;    //押したキーに応じて角度を2度ずつ増減
+    if ((e.key == "ArrowRight") || (e.key == "Right")) angle += 2*rad;
 
-
+    //シーソーを傾ける
+    for ( var i=0; i<seesaw.length; i++) {
+        seesaw[i].SetAngle(angle);                                      //シーソーの角度を設定
+    }
+}
+</script>
+<style>
+canvas {border: 1px solid gray;}
+</style>
+</head>
+<body onload="init()">
+<p>シーソー・ゲーム</p>
+[←][→]：シーソーを傾ける　[R]：ボールのリセット
+<hr>
+<canvas id="box2d" width="600" height="600"></canvas>
+</body>
+</html>
